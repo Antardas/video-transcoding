@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"target": "es2016",
+		"types": ["node"],
+		"module": "CommonJS",
+		"rootDir": "./src",
+		"outDir": "./build",
+		"removeComments": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"noImplicitAny": true,
+		"skipLibCheck": true
+	},
+	"exclude": ["./drizzle.config.ts"]
+}
