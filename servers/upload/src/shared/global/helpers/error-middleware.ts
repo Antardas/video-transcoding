@@ -25,5 +25,4 @@ function errorMiddleware(err: AppError, _req: Request, res: Response, _next: Nex
 	});
 }
 
-
-export default errorMiddleware
+export default errorMiddleware;
