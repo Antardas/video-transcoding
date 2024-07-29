@@ -1,5 +1,6 @@
 import app from './app';
 import dotenv from 'dotenv';
+import createBucketIfNotExists from './shared/global/helpers/create-bucket-if-not-exists';
 dotenv.config({ path: '.env' });
 
 const PORT = process.env.PORT || 5002;
@@ -12,6 +13,7 @@ process.on('uncaughtException', (err) => {
 
 const server = app.listen(PORT, () => {
 	console.log('Application is running of port: ', PORT);
+	createBucketIfNotExists(process.env.AWS_S3_BUCKET ?? '');
 });
 
 process.on('uncaughtException', (error: Error) => {
