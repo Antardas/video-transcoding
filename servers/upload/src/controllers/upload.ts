@@ -10,6 +10,9 @@ import { S3 } from 'aws-sdk';
 import AppError from '../shared/global/helpers/AppError';
 import { PgRaw } from 'drizzle-orm/pg-core/query-builders/raw';
 import { QueryResult } from 'pg';
+import { MessageBroker } from '../shared/services/kafka';
+import { VideoEvent } from '../types';
+
 const uploadController = {
 	initialize: catchAsyncError(async (req: Request, res: Response) => {
 		const { fileName } = req.body;
@@ -50,7 +53,7 @@ const uploadController = {
 
 	complete: catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
 		const { fileName, uploadId, title, description } = req.body;
-		
+
 		const listPartParams: S3.Types.ListPartsRequest = {
 			Bucket: BUCKET_NAME,
 			Key: fileName,
@@ -59,8 +62,7 @@ const uploadController = {
 		// get all parts list details
 		const data = await s3.listParts(listPartParams).promise();
 		console.log(`🚀 ~ complete:catchAsyncError ~ data:`, data);
-	
-		
+
 		const parts = data.Parts?.map((part) => ({
 			ETag: part.ETag,
 			PartNumber: part.PartNumber,
@@ -77,6 +79,20 @@ const uploadController = {
 		const video = await db.execute(
 			sql`INSERT INTO videos (description, title, url) VALUES (${description}, ${title}, ${uploadResult.Location})`
 		);
+		await MessageBroker.publish({
+			topic: 'VideoEvents',
+			message: {
+				fileName,
+				uploadId,
+				title,
+				description,
+				url: uploadResult.Location,
+			},
+			event: VideoEvent.VIDEO_UPLOADED,
+			headers: {
+				token: 'something',
+			},
+		});
 
 		res.status(200).json({ message: 'upload complete', data: video });
 	}),

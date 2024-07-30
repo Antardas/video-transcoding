@@ -15,7 +15,7 @@ const app: Application = express();
 		console.log('Producer connected');
 	});
 
-	const consumer = await MessageBroker.connectConsumer<Consumer>();
+	/* 	const consumer = await MessageBroker.connectConsumer<Consumer>();
 	consumer.on('consumer.connect', () => {
 		console.log('Consumer connected');
 	});
@@ -23,7 +23,7 @@ const app: Application = express();
 	// 2nd step subscribe a topic
 	await MessageBroker.subscribe('VideoEvents',() => {
 
-	});
+	}); */
 	app.use(uploadRouter);
 
 	app.use(errorMiddleware);

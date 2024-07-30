@@ -19,4 +19,4 @@ export interface PublishType {
 	message: Record<string, any>;
 }
 
-export type MessageHandler = (input: MessageType) => void;
+export type MessageHandler = (input: MessageType) => Promise<void>;
