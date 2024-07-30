@@ -1,10 +1,13 @@
 import { startApplication } from './app';
+import makeDirectory from './shared/global/helpers/make-directory';
+import { MessageBroker } from './shared/services/kafka';
 
 process.on('uncaughtException', (err) => {
 	console.log(`Error: ${err.message}`);
 	console.log('Shutting Down the Server due to unhandled Promise Rejection');
 });
 
+makeDirectory('files');
 startApplication();
 
 process.on('uncaughtException', (error: Error) => {
@@ -35,6 +38,8 @@ function shutDownProperly(exitCode: number): void {
 	Promise.resolve()
 		.then(() => {
 			console.info('Shutdown Complete');
+			MessageBroker.disconnectConsumer();
+			MessageBroker.disconnectProducer();
 		})
 		.catch((error: Error) => {
 			console.error(`Error During shut down:: ${error}`);
