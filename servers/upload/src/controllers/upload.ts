@@ -10,7 +10,6 @@ import { S3 } from 'aws-sdk';
 import AppError from '../shared/global/helpers/AppError';
 import { PgRaw } from 'drizzle-orm/pg-core/query-builders/raw';
 import { QueryResult } from 'pg';
-console.log(path.join('SampleVideo_1280x720_10mb.mp94'), 'dfadfasdfadsfds');
 const uploadController = {
 	initialize: catchAsyncError(async (req: Request, res: Response) => {
 		const { fileName } = req.body;
