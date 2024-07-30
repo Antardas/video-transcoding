@@ -1,0 +1,19 @@
+{
+	"name": "transcoder",
+	"version": "1.0.0",
+	"main": "index.js",
+	"license": "MIT",
+	"scripts": {
+		"start": "node --env-file=.env ./build/server.js",
+		"dev": "tsnd --respawn --transpile-only --env-file=.env ./src/server.ts",
+		"build": "tsc"
+	},
+	"dependencies": {
+		"kafkajs": "^2.2.4"
+	},
+	"devDependencies": {
+		"@types/node": "^22.0.0",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "^5.5.4"
+	}
+}
