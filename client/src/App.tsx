@@ -10,9 +10,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { promise, z } from 'zod';
+import { z } from 'zod';
 import { Button } from './components/ui/button';
 import { SERVER_URL } from './lib/constant';
+import VideoPlayer from './components/VideoPlayer/VideoPlayer';
 
 const formSchema = z.object({
 	title: z.string().min(2, {
@@ -86,8 +87,8 @@ function App() {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			title: '',
-			description: '',
+			title: 'Gobhinda Adipurusham',
+			description: 'Gobhinda Adipurusham',
 			file: undefined,
 		},
 	});
@@ -175,7 +176,10 @@ function App() {
 					</form>
 				</Form>
 			</div>
-			<div className=" w-3/5">video preview will show here</div>
+			<div className=" w-3/5">
+				video preview will show here
+				<VideoPlayer />
+			</div>
 		</div>
 	);
 }
