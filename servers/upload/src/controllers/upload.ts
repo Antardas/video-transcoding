@@ -12,7 +12,6 @@ import { PgRaw } from 'drizzle-orm/pg-core/query-builders/raw';
 import { QueryResult } from 'pg';
 import { MessageBroker } from '../shared/services/kafka';
 import { VideoEvent } from '../types';
-
 const uploadController = {
 	initialize: catchAsyncError(async (req: Request, res: Response) => {
 		const { fileName } = req.body;
