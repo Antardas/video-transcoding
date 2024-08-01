@@ -1,6 +1,7 @@
 import { startApplication } from './app';
 import makeDirectory from './shared/global/helpers/make-directory';
 import { MessageBroker } from './shared/services/kafka';
+dotenv.config({ path: '.env' });
 
 process.on('uncaughtException', (err) => {
 	console.log(`Error: ${err.message}`);

@@ -28,7 +28,8 @@ export default async function createBucketIfNotExists(bucketName: string) {
 		logger.info('Bucket exist');
 		logger.info(data);
 	} catch (err: unknown) {
-		console.error(err);
+		
+		logger.error("Bucket not found", (err as Error).name);
 		const error: AWSError = err as unknown as AWSError;
 
 		if (error.name === 'NotFound') {
