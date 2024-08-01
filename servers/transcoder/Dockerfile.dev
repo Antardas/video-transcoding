@@ -1,0 +1,34 @@
+FROM ubuntu AS runtime
+
+WORKDIR /transcoder
+RUN  --mount=type=cache,target=/var/cache/apt 
+RUN apt-get update -y && apt-get install -y 
+# 		\&& apt-get install -y nodejs  \
+# 		&& apt-get install -y python3 \
+# 		&& apt-get install -y python3-pi \
+# 		&& apt-get install -y ffmpeg \
+# 		&& pip install -U openai-whisper \
+# 		&& pip install setuptools-rust
+
+# RUN apt update -y && apt install -y \
+# 		-y python3 \
+# 		-y python3-pip \
+# 		-y ffmpeg
+
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - && \
+		apt-get install -y nodejs npm \
+		make
+
+# For whisper pypthon package 
+# RUN rm /usr/lib/python3.*/EXTERNALLY-MANAGED
+# RUN pip install openai-whisper 
+# RUN pip install setuptools-rust
+
+FROM runtime AS development
+COPY package*.json ./
+COPY yarn.lock ./
+RUN npm i yarn -g
+RUN yarn
+COPY . .
+CMD [ "yarn" "dev"]
+

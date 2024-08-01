@@ -9,3 +9,5 @@ next-env.d.ts
 **/.pem
 **/drizzle
 volume
+**/files/*
+**/*.m3u8

@@ -8,6 +8,7 @@ services:
         environment:
             # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
             - DEBUG=${DEBUG:-0}
+            - DISABLE_CORS_CHECKS=1
         volumes:
             - '${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack'
             - '/var/run/docker.sock:/var/run/docker.sock'
@@ -22,11 +23,27 @@ services:
         container_name: kafka
         hostname: kafka
         environment:
-            KAFKA_ZOOKEEPER_CONNECT: 192.168.1.13:2181
-            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.13:9092
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
             KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-            KAFKA_ADVERTISED_HOST_NAME: ${HOST_IP}
         ports:
             - 9092:9092
+            - 19092:19092
         depends_on:
             - zookeeper
+    tanscoder:
+        build:
+            context: servers/transcoder
+            dockerfile: Dockerfile.dev
+            target: development
+        container_name: transcoder
+        volumes:
+            - ./servers/transcoder:/transcoder
+            - /transcoder/node_modules
+        command: 'yarn run dev'
+        depends_on:
+          - kafka
+        profiles:
+          - exclude
