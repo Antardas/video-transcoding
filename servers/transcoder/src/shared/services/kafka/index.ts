@@ -14,8 +14,11 @@ const kafka = new Kafka({
 	clientId: CLIENT_ID,
 	brokers: BROKERS,
 	logLevel: logLevel.INFO,
+	retry: {
+		initialRetryTime: 300,
+		retries: 5,
+	},
 });
-
 const createTopic = async (topicNames: Array<TOPIC_TYPE>) => {
 	const topics = topicNames.map((topicName) => ({
 		topic: topicName,
@@ -84,9 +87,12 @@ const connectConsumer = async <T>(): Promise<T> => {
 
 	consumer = kafka.consumer({
 		groupId: GROUP_ID,
-		sessionTimeout: 1 * 60 * 1000,
-		heartbeatInterval: 12 * 1000,
+		sessionTimeout: 100000, // large enough to fit any message being processed
+		heartbeatInterval: 30000, // 1/3 of the session timeout
+
 	});
+
+
 
 	await consumer.connect();
 
@@ -107,9 +113,12 @@ const subscribe = async (topic: TOPIC_TYPE, messageHandler: MessageHandler) => {
 	await consumer.run({
 		autoCommit: false,
 		eachMessage: async ({ topic, message, partition, heartbeat }) => {
+			console.log('Each Message');
+
 			if (topic !== 'VideoEvents') {
 				return;
 			}
+			let intervalId;
 			try {
 				if (message.key && message.value) {
 					const inputMessage: MessageType = {
@@ -118,10 +127,10 @@ const subscribe = async (topic: TOPIC_TYPE, messageHandler: MessageHandler) => {
 						data: message.value ? JSON.parse(message.value.toString()) : null,
 					};
 
-					const intervalId = setInterval(async () => {
+					intervalId = setInterval(async () => {
 						await heartbeat();
-						console.log('heartBeating');
-					}, 10 * 1000);
+						console.log('heartBeating frm');
+					}, 2 * 1000);
 
 					await messageHandler(inputMessage);
 
@@ -136,6 +145,7 @@ const subscribe = async (topic: TOPIC_TYPE, messageHandler: MessageHandler) => {
 					]);
 				}
 			} catch (error) {
+				clearInterval(intervalId);
 				console.error('Error processing message or committing offset:', error);
 			}
 		},

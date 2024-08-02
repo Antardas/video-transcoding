@@ -4,8 +4,9 @@
 	"main": "index.js",
 	"license": "MIT",
 	"scripts": {
-		"start": "node --env-file=.env ./build/server.js",
-		"dev": "tsnd --respawn --transpile-only --env-file=.env ./src/server.ts",
+		"start": "node ./build/server.js",
+		"dev": "tsnd --respawn --transpile-only ./src/server.ts",
+		"dev:test": "tsnd --respawn --transpile-only ./src/nothing.ts",
 		"build": "tsc"
 	},
 	"dependencies": {
