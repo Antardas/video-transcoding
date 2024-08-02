@@ -29,7 +29,7 @@ const uploadController = {
 	}),
 
 	upload: catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-		console.log('got new request');
+		console.log('Uploading Chunk...');
 
 		if (!req.file) {
 			return next(new AppError('chunk is missing', 400));
@@ -47,7 +47,7 @@ const uploadController = {
 		const data = await s3.uploadPart(params).promise();
 		console.log(data);
 
-		res.status(200).json({ success: true });
+		return res.status(200).json({ success: true });
 	}),
 
 	complete: catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
@@ -60,7 +60,6 @@ const uploadController = {
 		};
 		// get all parts list details
 		const data = await s3.listParts(listPartParams).promise();
-		console.log(`🚀 ~ complete:catchAsyncError ~ data:`, data);
 
 		const parts = data.Parts?.map((part) => ({
 			ETag: part.ETag,
@@ -93,7 +92,7 @@ const uploadController = {
 			},
 		});
 
-		res.status(200).json({ message: 'upload complete', data: video });
+		return res.status(200).json({ message: 'upload complete' });
 	}),
 };
 

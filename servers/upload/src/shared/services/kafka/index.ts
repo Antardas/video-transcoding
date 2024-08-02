@@ -19,7 +19,7 @@ let consumer: Consumer;
 const createTopic = async (topicList: string[]) => {
 	const topicsParams = topicList.map((topic) => ({
 		topic,
-		numPartitions: 2,
+		numPartitions: 1,
 		replicationFactor: 1,
 	}));
 	const admin = kafka.admin();
@@ -41,6 +41,7 @@ const connectProducer = async <T>(): Promise<T> => {
 	await createTopic(['VideoEvents']);
 
 	if (producer) {
+		console.log(producer.events)
 		return producer as unknown as T;
 	}
 
