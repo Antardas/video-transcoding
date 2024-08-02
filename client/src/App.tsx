@@ -11,9 +11,10 @@ import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Button } from './components/ui/button';
-import { SERVER_URL } from './lib/constant';
-import VideoPlayer from './components/VideoPlayer/VideoPlayer';
+import { Button } from '@/components/ui/button';
+import { SERVER_URL } from '@/lib/constant';
+import VideoPlayer from '@/components/VideoPlayer/VideoPlayer';
+import VideoFeed from '@/components/VideoFeed/VideoFeed';
 
 const formSchema = z.object({
 	title: z.string().min(2, {
@@ -116,70 +117,73 @@ function App() {
 		console.log('Upload Complete');
 	}
 	return (
-		<div className="border border-slate-500 rounded flex p-2">
-			<div className="w-2/5 border-r border-slate-500 pr-2">
-				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-						<FormField
-							control={form.control}
-							name="title"
-							render={({ field }) => (
-								<FormItem className="flex flex-col items-start mb-4">
-									<FormLabel className="mb-2">Title</FormLabel>
-									<FormControl>
-										<Input placeholder="video title" {...field} />
-									</FormControl>
+		<div>
+			<div className="border border-slate-500 rounded flex p-2">
+				<div className="w-2/5 border-r border-slate-500 pr-2">
+					<Form {...form}>
+						<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+							<FormField
+								control={form.control}
+								name="title"
+								render={({ field }) => (
+									<FormItem className="flex flex-col items-start mb-4">
+										<FormLabel className="mb-2">Title</FormLabel>
+										<FormControl>
+											<Input placeholder="video title" {...field} />
+										</FormControl>
 
-									<FormMessage className="text-red-600 ml-3" />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="description"
-							render={({ field }) => (
-								<FormItem className="flex flex-col items-start mb-4">
-									<FormLabel className="mb-2">Description</FormLabel>
-									<FormControl>
-										<Input placeholder="video description" {...field} />
-									</FormControl>
+										<FormMessage className="text-red-600 ml-3" />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="description"
+								render={({ field }) => (
+									<FormItem className="flex flex-col items-start mb-4">
+										<FormLabel className="mb-2">Description</FormLabel>
+										<FormControl>
+											<Input placeholder="video description" {...field} />
+										</FormControl>
 
-									<FormMessage className="text-red-600 ml-3" />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="file"
-							render={({ field }) => (
-								<FormItem className="flex flex-col items-start mb-2">
-									<FormLabel className="mb-2">Video</FormLabel>
-									<FormControl>
-										<Input
-											type="file"
-											accept=".mp4, .webm, .ogg, .avi, .mov, .wmv, .flv, .mkv, .m4v"
-											onChange={(e) =>
-												field.onChange(
-													e.target.files ? e.target.files[0] : null
-												)
-											}
-										/>
-									</FormControl>
+										<FormMessage className="text-red-600 ml-3" />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="file"
+								render={({ field }) => (
+									<FormItem className="flex flex-col items-start mb-2">
+										<FormLabel className="mb-2">Video</FormLabel>
+										<FormControl>
+											<Input
+												type="file"
+												accept=".mp4, .webm, .ogg, .avi, .mov, .wmv, .flv, .mkv, .m4v"
+												onChange={(e) =>
+													field.onChange(
+														e.target.files ? e.target.files[0] : null
+													)
+												}
+											/>
+										</FormControl>
 
-									<FormMessage className="text-red-600 ml-3" />
-								</FormItem>
-							)}
-						/>
-						<Button type="submit" className="bg-slate-900 text-white">
-							Submit
-						</Button>
-					</form>
-				</Form>
+										<FormMessage className="text-red-600 ml-3" />
+									</FormItem>
+								)}
+							/>
+							<Button type="submit" className="bg-slate-900 text-white">
+								Submit
+							</Button>
+						</form>
+					</Form>
+				</div>
+				<div className=" w-3/5">
+					video preview will show here
+					<VideoPlayer />
+				</div>
 			</div>
-			<div className=" w-3/5">
-				video preview will show here
-				<VideoPlayer />
-			</div>
+			<VideoFeed />
 		</div>
 	);
 }
