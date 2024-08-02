@@ -11,3 +11,8 @@ next-env.d.ts
 volume
 **/files/*
 **/*.m3u8
+whisper.cpp/*
+**/*.mp4
+**/*.wav
+**/*.srt
+**/*.mp3
