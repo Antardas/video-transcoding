@@ -4,7 +4,6 @@ import path from 'path';
 import fs from 'node:fs';
 console.log(ffmpegInstaller);
 
-
 // generate subtitle with whisper officially supported python package
 const generateSubtitleRaw = async (
 	audioFilePath: string,
@@ -18,7 +17,7 @@ const generateSubtitleRaw = async (
 	const languageOption = language ? `--language ${language}` : '';
 	const taskOption = task ? `--task ${task}` : '';
 	const outputDirectory = path.join(process.cwd(), 'files');
-	const command = `whisper ${audioFilePath} ${modelOption} ${languageOption} ${taskOption} --fp16 False --output_format srt --output_dir ${outputDirectory}`;
+	const command = `whisper ${audioFilePath} ${modelOption} ${languageOption} ${taskOption} --fp16 False --output_format srt --output_dir ${outputDirectory} --translate`;
 
 	const [executable, ...args] = command.split(' ');
 	const newArgs = args.filter((s) => s !== '');
@@ -45,7 +44,7 @@ const generateSubtitleRaw = async (
 
 const generateSubtitleWithMakeFile = async (
 	audioFilePath: string,
-	outDir: string,
+	outFile: string,
 	language = '',
 	task = ''
 ): Promise<boolean> => {
@@ -102,27 +101,28 @@ const generateSubtitleWithMakeFile = async (
 	console.time('Subtitle');
 	console.log('Started generating subtitle');
 
-	const outputDirectory = path.join(process.cwd(), 'files');
-	const command = `./main -m ./ggml-base.en.bin -f ${audioFilePath} -of ${outputDirectory} -osrt`;
+	const mainPath = path.join(__dirname, 'main');
+	const modelPath = path.join(__dirname, 'ggml-base.bin');
+	const command = `./main -m ${modelPath} -f ${audioFilePath} -of ${outFile} -osrt`;
 
-	const [executable, ...args] = command.split(' ');
+	const [_executable, ...args] = command.split(' ');
 	const newArgs = args.filter((s) => s !== '');
 
-	const child = spawn(executable, newArgs);
+	const child = spawn(mainPath, newArgs);
 
 	return await new Promise<boolean>((resolve, reject) => {
 		child.stdout.on('data', (data: string) => {
 			console.log(`stdout: ${data}`);
 		});
-		
+
 		child.stderr.on('data', (data: string) => {
 			console.error(`stderr: ${data}`);
-			reject(new Error('Failed to generate subtitle'))
+			reject(new Error('Failed to generate subtitle'));
 		});
-		
+
 		child.on('error', (error: Error) => {
 			console.error(`Error: ${error.message}`);
-			reject(error)
+			reject(error);
 		});
 
 		child.on('close', (code: number) => {
@@ -132,6 +132,6 @@ const generateSubtitleWithMakeFile = async (
 		});
 	});
 };
-export const generateSubtitle = async (audioFilePath: string, outDir: string): Promise<boolean> => {
-	return await generateSubtitleWithMakeFile(audioFilePath, outDir);
+export const generateSubtitle = async (audioFilePath: string, subOutFile: string): Promise<boolean> => {
+	return await generateSubtitleWithMakeFile(audioFilePath, subOutFile);
 };
