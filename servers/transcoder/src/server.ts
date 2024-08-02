@@ -1,6 +1,7 @@
 import { startApplication } from './app';
 import makeDirectory from './shared/global/helpers/make-directory';
 import { MessageBroker } from './shared/services/kafka';
+import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
 process.on('uncaughtException', (err) => {
@@ -41,8 +42,11 @@ function shutDownProperly(exitCode: number): void {
 			console.info('Shutdown Complete');
 			MessageBroker.disconnectConsumer();
 			MessageBroker.disconnectProducer();
+			process.exit(0);
 		})
 		.catch((error: Error) => {
 			console.error(`Error During shut down:: ${error}`);
+			process.exit(1);
 		});
 }
+

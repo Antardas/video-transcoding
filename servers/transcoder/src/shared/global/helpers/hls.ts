@@ -31,7 +31,10 @@ const resolutions: ResolutionType[] = [
 
 export const FILES_PATH = path.join(process.cwd(), 'files');
 
-export async function createHSLVariants(fileName: string): Promise<VariantType[]> {
+export async function createHSLVariants(
+	fileName: string,
+	subtitle?: string
+): Promise<VariantType[]> {
 	const variantPlaylist: VariantType[] = [];
 	const replacedName = fileName.replace('.', '_');
 	const inputFilePath = path.join(FILES_PATH, fileName);
@@ -57,6 +60,7 @@ export async function createHSLVariants(fileName: string): Promise<VariantType[]
 					'-hls_time 10', // each chunk 10 seconds
 					'-hls_list_size 0', // means all chunk will be store in same playlist
 					`-hls_segment_filename ${chunkFileName}`, // naming each chunk file with format %03d.ts and the directory where will be stored ts transport streams(ts) file will be stored
+					...(subtitle ? [`-vf subtitles=${subtitle}`] : []),
 				])
 				.output(outputVariantMasterFileName) // the master play will be stored for each variant
 				.on('error', (err) => {
@@ -102,7 +106,6 @@ export function generateMasterPlaylist(fileName: string, variants: VariantType[]
 	fs.writeFileSync(masterPlaylistFilePath, masterPlaylist);
 	console.log(`Master playlist saved as ${masterFileName}`);
 }
-
 
 interface ResolutionType {
 	resolution: string;
