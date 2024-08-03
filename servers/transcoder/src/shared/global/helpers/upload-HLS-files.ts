@@ -1,14 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { unlink, readdir } from 'node:fs/promises';
-import { FILES_PATH } from './hls';
 import { BUCKET_NAME, s3 } from '../../services/AWS/s3';
 import { PutObjectRequest } from 'aws-sdk/clients/s3';
+import { VIDEO_FOLDER } from './CONSTANT';
 
 export default async function uploadHLSFilesToS3(fileName: string): Promise<void> {
 	console.log('Uploading hls files to S3...');
 
-	const files = await readdir(FILES_PATH);
+	const files = await readdir(VIDEO_FOLDER);
 
 	for (const file of files) {
 		console.log(file, fileName);
@@ -18,7 +18,7 @@ export default async function uploadHLSFilesToS3(fileName: string): Promise<void
 		}
 		console.log('Uploading file: ' + file);
 
-		const filePath = path.join(FILES_PATH, file);
+		const filePath = path.join(VIDEO_FOLDER, file);
 		const fileStream = fs.createReadStream(filePath);
 		const s3Params: PutObjectRequest = {
 			Bucket: BUCKET_NAME,
@@ -32,6 +32,6 @@ export default async function uploadHLSFilesToS3(fileName: string): Promise<void
 		};
 		await s3.upload(s3Params).promise();
 	}
-	await Promise.all(files.map((file) => unlink(path.join(FILES_PATH, file))));
+	await Promise.all(files.map((file) => unlink(path.join(VIDEO_FOLDER, file))));
 	console.log('HLS files uploaded to S3.');
 }

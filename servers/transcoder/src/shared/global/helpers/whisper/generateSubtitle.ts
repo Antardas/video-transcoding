@@ -2,6 +2,7 @@ import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import { exec, spawn } from 'child_process';
 import path from 'path';
 import fs from 'node:fs';
+import { VIDEO_FOLDER } from '../CONSTANT';
 console.log(ffmpegInstaller);
 
 // generate subtitle with whisper officially supported python package
@@ -16,7 +17,7 @@ const generateSubtitleRaw = async (
 	const modelOption = `--model ${model}`;
 	const languageOption = language ? `--language ${language}` : '';
 	const taskOption = task ? `--task ${task}` : '';
-	const outputDirectory = path.join(process.cwd(), 'files');
+	const outputDirectory = VIDEO_FOLDER;
 	const command = `whisper ${audioFilePath} ${modelOption} ${languageOption} ${taskOption} --fp16 False --output_format srt --output_dir ${outputDirectory} --translate`;
 
 	const [executable, ...args] = command.split(' ');
@@ -117,7 +118,6 @@ const generateSubtitleWithMakeFile = async (
 
 		child.stderr.on('data', (data: string) => {
 			console.error(`stderr: ${data}`);
-			reject(new Error('Failed to generate subtitle'));
 		});
 
 		child.on('error', (error: Error) => {
@@ -132,6 +132,9 @@ const generateSubtitleWithMakeFile = async (
 		});
 	});
 };
-export const generateSubtitle = async (audioFilePath: string, subOutFile: string): Promise<boolean> => {
+export const generateSubtitle = async (
+	audioFilePath: string,
+	subOutFile: string
+): Promise<boolean> => {
 	return await generateSubtitleWithMakeFile(audioFilePath, subOutFile);
 };

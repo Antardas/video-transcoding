@@ -2,6 +2,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import path from 'node:path';
 import fs from 'node:fs';
+import { VIDEO_FOLDER } from './CONSTANT';
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 console.log('FFMPEG version: ', ffmpegInstaller.version);
@@ -37,15 +38,15 @@ export async function createHSLVariants(
 ): Promise<VariantType[]> {
 	const variantPlaylist: VariantType[] = [];
 	const replacedName = fileName.replace('.', '_');
-	const inputFilePath = path.join(FILES_PATH, fileName);
+	const inputFilePath = path.join(VIDEO_FOLDER, fileName);
 	console.log(`HLS Video Creating is stated`);
 
 	for (const { resolution, audioBitrate, videoBitrate } of resolutions) {
 		const outputVariantMasterFileName = path.join(
-			FILES_PATH,
+			VIDEO_FOLDER,
 			`${replacedName}_${resolution}.m3u8`
 		); // TODO: change file path
-		const chunkFileName = path.join(FILES_PATH, `${replacedName}_${resolution}_%03d.ts`);
+		const chunkFileName = path.join(VIDEO_FOLDER, `${replacedName}_${resolution}_%03d.ts`);
 		console.log(chunkFileName, outputVariantMasterFileName);
 
 		await new Promise<void>((resolve, reject) => {
@@ -55,12 +56,11 @@ export async function createHSLVariants(
 					`-b:v ${videoBitrate}`, // video bitrate in kbps
 					`-c:a aac`, // codec name audio compression format
 					`-b:a ${audioBitrate}`, // audio bitrate in kbps
-					`-vf scale=${resolution}`, // add video filter and resize based on resolution
+					`-vf scale=${resolution}${subtitle ? ',subtitles=' + subtitle : ''}`, // add video filter and resize based on resolution
 					'-f hls', // format hls video
 					'-hls_time 10', // each chunk 10 seconds
 					'-hls_list_size 0', // means all chunk will be store in same playlist
 					`-hls_segment_filename ${chunkFileName}`, // naming each chunk file with format %03d.ts and the directory where will be stored ts transport streams(ts) file will be stored
-					...(subtitle ? [`-vf subtitles=${subtitle}`] : []),
 				])
 				.output(outputVariantMasterFileName) // the master play will be stored for each variant
 				.on('error', (err) => {
@@ -102,7 +102,7 @@ export function generateMasterPlaylist(fileName: string, variants: VariantType[]
 		.join('\n');
 	masterPlaylist = `#EXTM3U\n${masterPlaylist}`;
 	const masterFileName = `${fileName.replace('.', '_')}_master.m3u8`;
-	const masterPlaylistFilePath = path.join(FILES_PATH, masterFileName);
+	const masterPlaylistFilePath = path.join(VIDEO_FOLDER, masterFileName);
 	fs.writeFileSync(masterPlaylistFilePath, masterPlaylist);
 	console.log(`Master playlist saved as ${masterFileName}`);
 }
