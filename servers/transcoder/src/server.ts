@@ -2,6 +2,8 @@ import { startApplication } from './app';
 import makeDirectory from './shared/global/helpers/make-directory';
 import { MessageBroker } from './shared/services/kafka';
 import dotenv from 'dotenv';
+import path from 'node:path';
+import { VIDEO_FOLDER, VIDEO_SUBTITLE_FOLDER } from './shared/global/helpers/CONSTANT';
 dotenv.config({ path: '.env' });
 
 process.on('uncaughtException', (err) => {
@@ -9,7 +11,8 @@ process.on('uncaughtException', (err) => {
 	console.log('Shutting Down the Server due to unhandled Promise Rejection');
 });
 
-makeDirectory('files');
+makeDirectory(VIDEO_SUBTITLE_FOLDER);
+makeDirectory(VIDEO_FOLDER);
 startApplication();
 
 process.on('uncaughtException', (error: Error) => {
@@ -49,4 +52,3 @@ function shutDownProperly(exitCode: number): void {
 			process.exit(1);
 		});
 }
-
