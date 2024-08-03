@@ -129,8 +129,8 @@ const subscribe = async (topic: TOPIC_TYPE, messageHandler: MessageHandler) => {
 
 					intervalId = setInterval(async () => {
 						await heartbeat();
-						console.log('heartBeating frm');
-					}, 2 * 1000);
+						console.log('heartBeating');
+					}, 10 * 1000);
 
 					await messageHandler(inputMessage);
 
