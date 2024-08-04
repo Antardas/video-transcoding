@@ -1,4 +1,3 @@
-// logger.js
 
 import { createLogger as winstonCreateLogger, format, transports } from 'winston';
 const { combine, timestamp, printf, colorize, label, json, prettyPrint } = format;

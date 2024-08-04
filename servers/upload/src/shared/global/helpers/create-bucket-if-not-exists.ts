@@ -21,14 +21,14 @@ const corsObject = {
 };
 const logger: Logger = createLogger('AWS');
 export default async function createBucketIfNotExists(bucketName: string) {
-	console.log(bucketName, 'AWS_S3_BUCKET');
+	logger.info(bucketName, 'AWS_S3_BUCKET');
 
 	try {
 		const data = await s3.headBucket({ Bucket: bucketName }).promise();
 		logger.info('Bucket exist');
 		logger.info(data);
 	} catch (err: unknown) {
-		
+		logger.error(err);
 		logger.error("Bucket not found", (err as Error).name);
 		const error: AWSError = err as unknown as AWSError;
 

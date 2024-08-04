@@ -2,7 +2,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import path from 'node:path';
 import fs from 'node:fs';
-import { VIDEO_FOLDER } from './CONSTANT';
+import { VIDEO_FOLDER, VIDEO_SUBTITLE_FOLDER } from './CONSTANT';
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 console.log('FFMPEG version: ', ffmpegInstaller.version);
@@ -41,6 +41,7 @@ export async function createHSLVariants(
 	const inputFilePath = path.join(VIDEO_FOLDER, fileName);
 	console.log(`HLS Video Creating is stated`);
 
+	let isSubTitleGenerated: boolean = false;
 	for (const { resolution, audioBitrate, videoBitrate } of resolutions) {
 		const outputVariantMasterFileName = path.join(
 			VIDEO_FOLDER,
@@ -48,20 +49,30 @@ export async function createHSLVariants(
 		); // TODO: change file path
 		const chunkFileName = path.join(VIDEO_FOLDER, `${replacedName}_${resolution}_%03d.ts`);
 		console.log(chunkFileName, outputVariantMasterFileName);
-
 		await new Promise<void>((resolve, reject) => {
-			ffmpeg(inputFilePath)
-				.outputOptions([
-					'-c:v h264', // codec name video compression format
-					`-b:v ${videoBitrate}`, // video bitrate in kbps
-					`-c:a aac`, // codec name audio compression format
-					`-b:a ${audioBitrate}`, // audio bitrate in kbps
-					`-vf scale=${resolution}${subtitle ? ',subtitles=' + subtitle : ''}`, // add video filter and resize based on resolution
-					'-f hls', // format hls video
-					'-hls_time 10', // each chunk 10 seconds
-					'-hls_list_size 0', // means all chunk will be store in same playlist
-					`-hls_segment_filename ${chunkFileName}`, // naming each chunk file with format %03d.ts and the directory where will be stored ts transport streams(ts) file will be stored
-				])
+			let ffmpegCommand = ffmpeg(inputFilePath);
+			if (!isSubTitleGenerated && subtitle) {
+				ffmpegCommand = ffmpegCommand.input(subtitle);
+				isSubTitleGenerated = true;
+			}
+			const outputOptions = [
+				'-c:v h264', // codec name video compression format
+				`-b:v ${videoBitrate}`, // video bitrate in kbps
+				`-c:a aac`, // codec name audio compression format
+				`-b:a ${audioBitrate}`, // audio bitrate in kbps
+				`-vf scale=${resolution}`, // add video filter and resize based on resolution
+				'-f hls', // format hls video
+				'-hls_time 10', // each chunk 10 seconds
+				'-hls_list_size 0', // means all chunk will be store in same playlist
+				`-hls_segment_filename ${chunkFileName}`, // naming each chunk file with format %03d.ts and the directory where will be stored ts transport streams(ts) file will be stored
+			];
+
+			if (subtitle && !isSubTitleGenerated) {
+				outputOptions.push('-c:s webvtt');
+			}
+
+			ffmpegCommand = ffmpegCommand
+				.outputOptions(outputOptions)
 				.output(outputVariantMasterFileName) // the master play will be stored for each variant
 				.on('error', (err) => {
 					console.log(err);
@@ -76,15 +87,20 @@ export async function createHSLVariants(
 				})
 				.on('start', () => {
 					console.log(`Started processing ${resolution} variant for ${fileName}`);
-				})
-				.run();
+				});
+			ffmpegCommand.run();
 		});
 	}
+
 	console.log('All variants finished');
 	return variantPlaylist;
 }
 
-export function generateMasterPlaylist(fileName: string, variants: VariantType[]) {
+export function generateMasterPlaylist(
+	fileName: string,
+	variants: VariantType[],
+	subtitle: string
+) {
 	let masterPlaylist = variants
 		.map(({ outputFile, resolution }) => {
 			const bandwidth =
@@ -97,9 +113,12 @@ export function generateMasterPlaylist(fileName: string, variants: VariantType[]
 					: resolution === '1920x1080'
 					? 4500000
 					: 0;
-			return `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${resolution}\n${outputFile}`;
+			return `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${resolution},SUBTITLES="subs"\n${outputFile}`;
 		})
 		.join('\n');
+	if (subtitle) {
+		masterPlaylist += `\n#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",LANGUAGE="en",NAME="English",AUTOSELECT=YES,DEFAULT=YES,URI="${"video_mp4_320x180_vtt.m3u8"}"`;
+	}
 	masterPlaylist = `#EXTM3U\n${masterPlaylist}`;
 	const masterFileName = `${fileName.replace('.', '_')}_master.m3u8`;
 	const masterPlaylistFilePath = path.join(VIDEO_FOLDER, masterFileName);
@@ -117,3 +136,7 @@ type VariantType = {
 	resolution: string;
 	outputFile: string;
 };
+
+export async function generateHLSSubtitlePlaylist() {
+	await new Promise((resolve, reject) => {});
+}
