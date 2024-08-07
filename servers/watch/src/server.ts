@@ -2,7 +2,7 @@ import app from './app';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.PORT || 5004;
 
 // Handling Uncaught Exception
 process.on('uncaughtException', (err) => {
