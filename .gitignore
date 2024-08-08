@@ -16,3 +16,4 @@ whisper.cpp/*
 **/*.wav
 **/*.srt
 **/*.mp3
+**/videos/*
