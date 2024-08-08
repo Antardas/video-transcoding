@@ -48,7 +48,7 @@ export async function startApplication() {
 	await generateSubtitle(wavOutFile, subOutFile);
 	const variants = await createHSLVariants(fileName, `${subOutFile}.srt`);
 
-	generateMasterPlaylist(fileName, variants, subTitleMasterFile);
+	generateMasterPlaylist(fileName, variants, `${data.data.fileName.replace('.', "_").split(' ').join('_')}_320x180_vtt.m3u8`);
 	console.log('Deleting local copy for video');
 	await deleteFile(downloadedVideoPath);
 	console.log('Deleted local copy for video');

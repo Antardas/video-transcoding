@@ -12,6 +12,7 @@
 		"db:push": "drizzle-kit push"
 	},
 	"dependencies": {
+		"@types/qs": "^6.9.15",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",
 		"drizzle-orm": "^0.32.1",

@@ -117,7 +117,7 @@ export function generateMasterPlaylist(
 		})
 		.join('\n');
 	if (subtitle) {
-		masterPlaylist += `\n#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",LANGUAGE="en",NAME="English",AUTOSELECT=YES,DEFAULT=YES,URI="${"video_mp4_320x180_vtt.m3u8"}"`;
+		masterPlaylist += `\n#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",LANGUAGE="en",NAME="English",AUTOSELECT=YES,DEFAULT=YES,URI="${subtitle}"`;
 	}
 	masterPlaylist = `#EXTM3U\n${masterPlaylist}`;
 	const masterFileName = `${fileName.replace('.', '_')}_master.m3u8`;
