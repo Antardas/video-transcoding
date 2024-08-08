@@ -1,21 +1,17 @@
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { VideoObj } from '@/types';
+import VideoPlayer from '../VideoPlayer/VideoPlayer';
 
-type Props = {
-	url: string;
-	title: string;
-};
-const VideoCard = ({ url }: Props) => {
+const VideoCard = ({ url, title }: VideoObj) => {
 	return (
 		<div>
 			<Card className="">
 				<CardContent className="rounded-md overflow-hidden px-0 py-0">
-					<video src={url} controls></video>
+					<VideoPlayer width={'100%'} height={'auto'} src={url} controls />
 				</CardContent>
 				<CardFooter className="flex justify-between px-3 pt-3 pb-1">
 					<div className="text-start flex-1">
-						<h5 className="mr-1">
-							How to Deploy container in ECR and orchestrate with ECS
-						</h5>
+						<h5 className="mr-1">{title}</h5>
 					</div>
 					<div className="w-[6rem]">{`1.8K`} Views</div>
 				</CardFooter>
