@@ -1,4 +1,4 @@
-import { MessageType, TOPIC_TYPE, VideoEvent } from '../../../types';
+import { MessageType, TOPIC_TYPE, VideoEvent, ProgressEvent } from '../../../types';
 
 export interface KafkaType {
 	// Producer
@@ -9,14 +9,14 @@ export interface KafkaType {
 	// Consumer
 	connectConsumer: <T>() => Promise<T>;
 	disconnectConsumer: () => Promise<void>;
-	subscribe: (topic: TOPIC_TYPE,messageHandler: MessageHandler) => Promise<void>;
+	subscribe: (topic: TOPIC_TYPE, messageHandler: MessageHandler) => Promise<void>;
 }
 
 export interface PublishType {
 	headers?: Record<string, any>;
 	topic: TOPIC_TYPE;
-	event: VideoEvent;
+	event: VideoEvent | ProgressEvent;
 	message: Record<string, any>;
 }
 
-export type MessageHandler =  (input: MessageType) => Promise<void>;
+export type MessageHandler = (input: MessageType) => Promise<void>;

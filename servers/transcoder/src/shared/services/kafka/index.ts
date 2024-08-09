@@ -22,7 +22,7 @@ const kafka = new Kafka({
 const createTopic = async (topicNames: Array<TOPIC_TYPE>) => {
 	const topics = topicNames.map((topicName) => ({
 		topic: topicName,
-		numPartitions: 2,
+		numPartitions: 1,
 		replicationFactor: 1,
 	}));
 
@@ -41,7 +41,7 @@ const createTopic = async (topicNames: Array<TOPIC_TYPE>) => {
 };
 
 const connectProducer = async <T>(): Promise<T> => {
-	await createTopic(['VideoEvents']);
+	await createTopic(['VideoEvents', 'ProgressEvents']);
 
 	if (producer) {
 		return producer as unknown as T;
@@ -115,9 +115,10 @@ const subscribe = async (topic: TOPIC_TYPE, messageHandler: MessageHandler) => {
 		eachMessage: async ({ topic, message, partition, heartbeat }) => {
 			console.log('Each Message');
 
-			if (topic !== 'VideoEvents') {
+			if (topic !== 'VideoEvents' || topic !== 'VideoEvents') {
 				return;
 			}
+
 			let intervalId;
 			try {
 				if (message.key && message.value) {
