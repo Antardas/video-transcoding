@@ -1,6 +1,13 @@
+import http from 'http';
 import dotenv from 'dotenv';
-import { httpServer, PORT } from './socket';
+import app from './app';
+import { SocketHandler } from './socket';
 dotenv.config({ path: '.env' });
+const PORT = process.env.PORT || 5005;
+const httpServer: http.Server = http.createServer(app);
+
+const socket = new SocketHandler(httpServer);
+socket.listen()
 
 // Handling Uncaught Exception
 process.on('uncaughtException', (err) => {
