@@ -1,3 +1,6 @@
 {
-	"cSpell.words": ["bigserial", "Partitioner", "Partitioners"]
+	"cSpell.words": ["bigserial", "Partitioner", "Partitioners"],
+	"files.associations": {
+		"*.css": "tailwindcss"
+	}
 }
