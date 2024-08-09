@@ -51,7 +51,7 @@ const uploadController = {
 	}),
 
 	complete: catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-		const { fileName, uploadId, title, description } = req.body;
+		const { fileName, uploadId, title, description, userId } = req.body;
 
 		const listPartParams: S3.Types.ListPartsRequest = {
 			Bucket: BUCKET_NAME,
@@ -75,8 +75,9 @@ const uploadController = {
 		console.log(uploadResult);
 
 		const video = await db.execute(
-			sql`INSERT INTO videos (description, title, url) VALUES (${description}, ${title}, ${uploadResult.Location})`
+			sql`INSERT INTO videos (description, title, url) VALUES (${description}, ${title}, ${uploadResult.Location}) RETURNING *;`
 		);
+		
 		await MessageBroker.publish({
 			topic: 'VideoEvents',
 			message: {
@@ -85,6 +86,8 @@ const uploadController = {
 				title,
 				description,
 				url: uploadResult.Location,
+				videoId: video.rows[0].id,
+				userId
 			},
 			event: VideoEvent.VIDEO_UPLOADED,
 			headers: {
@@ -92,7 +95,7 @@ const uploadController = {
 			},
 		});
 
-		return res.status(200).json({ message: 'upload complete' });
+		return res.status(200).json({ message: 'upload complete', data: video.rows[0] });
 	}),
 };
 
