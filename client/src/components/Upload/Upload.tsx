@@ -113,7 +113,7 @@ const Upload = () => {
 		const uploadId = await initializeVideoUpload(updatedFile);
 		console.log(updatedFile);
 		const { totalChunk } = await uploadChunk(values, uploadId);
-
+		const userId = localStorage.getItem('userId');
 		await fetch(`${SERVER_URL}/upload/complete`, {
 			method: 'post',
 			headers: {
@@ -126,6 +126,7 @@ const Upload = () => {
 				totalChunk,
 				title: values.title,
 				description: values.description,
+				userId,
 			}),
 		});
 		console.log('Upload Complete');
@@ -194,7 +195,7 @@ const Upload = () => {
 				</Form>
 			</div>
 			<div className="w-3/5 overflow-hidden ">
-				<div className='ml-2'>
+				<div className="ml-2">
 					{form.getValues('file') ? (
 						<VideoPlayer
 							width={'100%'}

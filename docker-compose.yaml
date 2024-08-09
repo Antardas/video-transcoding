@@ -60,5 +60,12 @@ services:
 
         volumes:
             - postgres:/var/lib/postgresql/data
+    nginx:
+      image: nginx:latest
+      container_name: nginx
+      ports:
+        - 5000:80
+      volumes:
+        - ./nginx/:/etc/nginx
 volumes:
     postgres:
