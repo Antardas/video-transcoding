@@ -11,6 +11,7 @@
 	},
 	"dependencies": {
 		"@ffmpeg-installer/ffmpeg": "^1.1.0",
+		"@ffprobe-installer/ffprobe": "^2.1.2",
 		"@types/fluent-ffmpeg": "^2.1.25",
 		"aws-sdk": "^2.1664.0",
 		"dotenv": "^16.4.5",

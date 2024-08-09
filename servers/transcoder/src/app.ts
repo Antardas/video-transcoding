@@ -1,6 +1,6 @@
-import { Consumer } from 'kafkajs';
+import { Consumer, Producer } from 'kafkajs';
 import { MessageBroker } from './shared/services/kafka';
-import { MessageType, VideoEvent } from './types';
+import { MessageType, ProgressEvent, VideoEvent, VideoProcessingProgress } from './types';
 import { downloadFromS3 } from './shared/global/helpers/download-from-s3';
 import { createHSLVariants, generateMasterPlaylist } from './shared/global/helpers/hls';
 import deleteFile from './shared/global/helpers/delete-file';
@@ -9,6 +9,7 @@ import path from 'path';
 import { generateSubtitle } from './shared/global/helpers/whisper/generateSubtitle';
 import { convertToWav } from './shared/global/helpers/whisper/convert-to-wav';
 import { VIDEO_FOLDER, VIDEO_SUBTITLE_FOLDER } from './shared/global/helpers/CONSTANT';
+import ProgressGenerator from './shared/global/helpers/progress-generator';
 export async function startApplication() {
 	// try {
 	// 	await testApplication();
@@ -17,6 +18,7 @@ export async function startApplication() {
 	// }
 	// return;
 	const consumer = await MessageBroker.connectConsumer<Consumer>();
+	const producer = await MessageBroker.connectProducer<Producer>();
 	consumer.on('consumer.connect', (event) => {
 		console.log('Consumer connected', event.id);
 	});
@@ -28,66 +30,119 @@ export async function startApplication() {
 		console.error(error);
 	});
 
+	producer.on('producer.connect', (event) => {
+		console.log('Producer Connected', event.id);
+	});
+
 	MessageBroker.subscribe('VideoEvents', async (data: MessageType) => {
 		console.log('transcode video here');
 		console.log(data);
 
 		if (data.event === VideoEvent.VIDEO_UPLOADED) {
-			const fileName = data.data.fileName.split(' ').join('_');
-	let subTitleMasterFile = path.join(VIDEO_FOLDER, `${data.data.fileName.split(' ').join('_')}_320x180_vtt.m3u8`);
-	const downloadedVideoPath = path.join(VIDEO_FOLDER, fileName);
-	await downloadFromS3(data.data.fileName, downloadedVideoPath);
-	console.log('STEP-2------------');
-	const wavOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_') + '.wav'); // "transcript" is a file name we have to provide it with extension
-	const subOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_')); // "transcript" is a file name we have to provide it with extension
-	console.log('Converting to wav file', downloadedVideoPath);
-	console.log('STEP-2------------');
+			const progress = new ProgressGenerator(data.data.videoId, data.data.userId);
+			progress.updateStatus('processing');
 
-	await convertToWav(downloadedVideoPath, wavOutFile);
-	console.log('STEP-3------------');
-	await generateSubtitle(wavOutFile, subOutFile);
-	const variants = await createHSLVariants(fileName, `${subOutFile}.srt`);
+			// return;
+			try {
+				const fileName = data.data.fileName.split(' ').join('_');
+				const downloadedVideoPath = path.join(VIDEO_FOLDER, fileName);
+				progress.updateInitialization('inProgress');
+				await downloadFromS3(data.data.fileName, downloadedVideoPath);
+				progress.updateInitialization('completed');
+				console.log('STEP-2------------');
+				const wavOutFile = path.join(
+					VIDEO_SUBTITLE_FOLDER,
+					fileName.replace('.', '_') + '.wav'
+				); // "transcript" is a file name we have to provide it with extension
+				const subOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_')); // "transcript" is a file name we have to provide it with extension
+				console.log('Converting to wav file', downloadedVideoPath);
+				await progress.updateSubtitleGeneration('0');
+				await convertToWav(downloadedVideoPath, wavOutFile);
+				await progress.updateSubtitleGeneration('5');
+				await generateSubtitle(
+					wavOutFile,
+					subOutFile,
+					progress.updateSubtitleGeneration.bind(progress)
+				);
 
-	generateMasterPlaylist(fileName, variants, `${data.data.fileName.replace('.', "_").split(' ').join('_')}_320x180_vtt.m3u8`);
-	console.log('Deleting local copy for video');
-	await deleteFile(downloadedVideoPath);
-	console.log('Deleted local copy for video');
-	await uploadHLSFilesToS3(fileName);
+				const variants = await createHSLVariants(
+					fileName,
+					`${subOutFile}.srt`,
+					progress.updateTranscoding.bind(progress)
+				);
+
+				generateMasterPlaylist(
+					fileName,
+					variants,
+					`${data.data.fileName.replace('.', '_').split(' ').join('_')}_320x180_vtt.m3u8`
+				);
+				console.log('Deleting local copy for video');
+				await deleteFile(downloadedVideoPath);
+				console.log('Deleted local copy for video');
+				await uploadHLSFilesToS3(fileName);
+				progress.updateStatus('completed');
+			} catch (error) {
+				console.log(error);
+			}
 		}
 	});
 }
 
 async function testApplication() {
 	const data = {
-		headers: { token: 'TONE' },
+		headers: { token: 'token' },
 		event: 'video_uploaded',
 		data: {
 			fileName: 'video.mp4',
 			uploadId:
-				'TlnxVYWDlEjBxUzhwredHiGA4ERtRPyFGI0SuWpWSAYW1CGH9-qi7DLhIxsUo-D2azlq4sBcEN3bSmse5l960MV7NyPL00zlOk5UMfa5oMEr3kDTNRHjwdxnz42uMlym',
-			title: 'Gobhinda Adipurusham',
-			description: 'Gobhinda Adipurusham',
+				'z0rnI88mLcg-j3p5VQ2juuTwPbiHi_4vBrt06nXbOXXwit2zmFpIXn27uN-dQmaNL8UnHOhUhgGwAW1U-pPj7ObnMb64Wp5GMO1m00cGESOlbx_Yc0PeEhgqoBhhnAqT',
+			title: 'Video Title',
+			description: 'Video Description',
 			url: 'http://video.s3.localhost.localstack.cloud:4566/video.mp4',
+			userId: '700e7594-093a-412b-b769-58860abf5334',
+			videoId: '22',
 		},
 	};
-	const fileName = data.data.fileName.split(' ').join('_');
-	let subTitleMasterFile = path.join(VIDEO_FOLDER, `${data.data.fileName.split(' ').join('_')}_320x180_vtt.m3u8`);
-	const downloadedVideoPath = path.join(VIDEO_FOLDER, fileName);
-	await downloadFromS3(data.data.fileName, downloadedVideoPath);
-	console.log('STEP-2------------');
-	const wavOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_') + '.wav'); // "transcript" is a file name we have to provide it with extension
-	const subOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_')); // "transcript" is a file name we have to provide it with extension
-	console.log('Converting to wav file', downloadedVideoPath);
-	console.log('STEP-2------------');
+	const progress = new ProgressGenerator(data.data.videoId, data.data.userId);
+	progress.updateStatus('processing');
 
-	await convertToWav(downloadedVideoPath, wavOutFile);
-	console.log('STEP-3------------');
-	await generateSubtitle(wavOutFile, subOutFile);
-	const variants = await createHSLVariants(fileName, `${subOutFile}.srt`);
+	// return;
+	try {
+		const fileName = data.data.fileName.split(' ').join('_');
+		const downloadedVideoPath = path.join(VIDEO_FOLDER, fileName);
+		progress.updateInitialization('inProgress');
+		await downloadFromS3(data.data.fileName, downloadedVideoPath);
+		progress.updateInitialization('completed');
+		console.log('STEP-2------------');
+		const wavOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_') + '.wav'); // "transcript" is a file name we have to provide it with extension
+		const subOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_')); // "transcript" is a file name we have to provide it with extension
+		console.log('Converting to wav file', downloadedVideoPath);
+		await progress.updateSubtitleGeneration('0');
+		await convertToWav(downloadedVideoPath, wavOutFile);
+		await progress.updateSubtitleGeneration('5');
+		await generateSubtitle(
+			wavOutFile,
+			subOutFile,
+			progress.updateSubtitleGeneration.bind(progress)
+		);
 
-	generateMasterPlaylist(fileName, variants, subTitleMasterFile);
-	console.log('Deleting local copy for video');
-	await deleteFile(downloadedVideoPath);
-	console.log('Deleted local copy for video');
-	await uploadHLSFilesToS3(fileName);
+		const variants = await createHSLVariants(
+			fileName,
+			`${subOutFile}.srt`,
+			progress.updateTranscoding.bind(progress)
+		);
+
+		generateMasterPlaylist(
+			fileName,
+			variants,
+			`${data.data.fileName.replace('.', '_').split(' ').join('_')}_320x180_vtt.m3u8`
+		);
+		console.log('Deleting local copy for video');
+		await deleteFile(downloadedVideoPath);
+		console.log('Deleted local copy for video');
+		await uploadHLSFilesToS3(fileName);
+		progress.updateStatus('completed');
+	} catch (error) {
+		console.log(error);
+	}
 }

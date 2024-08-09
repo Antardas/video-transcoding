@@ -46,8 +46,7 @@ const generateSubtitleRaw = async (
 const generateSubtitleWithMakeFile = async (
 	audioFilePath: string,
 	outFile: string,
-	language = '',
-	task = ''
+	progress: (percentage: string) => void
 ): Promise<boolean> => {
 	/* 
 	clone the repo
@@ -66,7 +65,6 @@ const generateSubtitleWithMakeFile = async (
 
 	const regex = /^ggml-.*\.bin$/;
 	const listOfFile = fs.readdirSync(__dirname);
-	console.log(listOfFile);
 
 	let modelExist = false;
 	let mainFileExists = false;
@@ -104,12 +102,13 @@ const generateSubtitleWithMakeFile = async (
 
 	const mainPath = path.join(__dirname, 'main');
 	const modelPath = path.join(__dirname, 'ggml-base.bin');
-	const command = `./main -m ${modelPath} -f ${audioFilePath} -of ${outFile} -osrt`;
+	const command = `./main -m ${modelPath} -f ${audioFilePath} -of ${outFile} -osrt -pp`;
 
 	const [_executable, ...args] = command.split(' ');
 	const newArgs = args.filter((s) => s !== '');
 
 	const child = spawn(mainPath, newArgs);
+	const percentageRegex = /progress\s*=\s*(\d+)%/;
 
 	return await new Promise<boolean>((resolve, reject) => {
 		child.stdout.on('data', (data: string) => {
@@ -117,7 +116,13 @@ const generateSubtitleWithMakeFile = async (
 		});
 
 		child.stderr.on('data', (data: string) => {
-			console.error(`stderr: ${data}`);
+			const match = data.toString().match(percentageRegex);
+			if (match) {
+				const percentage = match[1];
+				progress(percentage);
+				console.log(percentage);
+			}
+			// console.error(`stderr: ${data}`);
 		});
 
 		child.on('error', (error: Error) => {
@@ -128,13 +133,15 @@ const generateSubtitleWithMakeFile = async (
 		child.on('close', (code: number) => {
 			console.timeEnd('Subtitle');
 			console.log(`Child process exited with code ${code}`);
+			// progress('100');
 			resolve(code === 0); // 0 means successful completion of the process. 1 means error. 2 means termination due to signal. 127 means command not found. 126 means permission denied. 128+n means signal n was received. 130 means killed by termination signal. 137 means program received a fatal signal like SIGKILL or SIGSEGV. 139 means program received a fatal signal like SIG
 		});
 	});
 };
 export const generateSubtitle = async (
 	audioFilePath: string,
-	subOutFile: string
+	subOutFile: string,
+	progress: (percentage: string) => void
 ): Promise<boolean> => {
-	return await generateSubtitleWithMakeFile(audioFilePath, subOutFile);
+	return await generateSubtitleWithMakeFile(audioFilePath, subOutFile, progress);
 };

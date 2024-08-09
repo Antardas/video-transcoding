@@ -8,6 +8,7 @@ dotenv.config({ path: '.env' });
 
 process.on('uncaughtException', (err) => {
 	console.log(`Error: ${err.message}`);
+	console.log(err)
 	console.log('Shutting Down the Server due to unhandled Promise Rejection');
 });
 

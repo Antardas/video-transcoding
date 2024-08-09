@@ -1,10 +1,12 @@
-import ffmpeg from 'fluent-ffmpeg';
+import ffmpeg, { ffprobe } from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import ffmpegProbe from '@ffprobe-installer/ffprobe';
 import path from 'node:path';
 import fs from 'node:fs';
 import { VIDEO_FOLDER, VIDEO_SUBTITLE_FOLDER } from './CONSTANT';
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfprobePath(ffmpegProbe.path);
 console.log('FFMPEG version: ', ffmpegInstaller.version);
 
 const resolutions: ResolutionType[] = [
@@ -34,7 +36,8 @@ export const FILES_PATH = path.join(process.cwd(), 'files');
 
 export async function createHSLVariants(
 	fileName: string,
-	subtitle?: string
+	subtitle: string,
+	progress: (percentage: string, resolution: string) => void
 ): Promise<VariantType[]> {
 	const variantPlaylist: VariantType[] = [];
 	const replacedName = fileName.replace('.', '_');
@@ -84,6 +87,10 @@ export async function createHSLVariants(
 						outputFile: `${replacedName}_${resolution}.m3u8`,
 					});
 					resolve();
+				})
+				.on('progress', (data) => {
+					progress(resolution, `${Math.round(data.percent ?? 0)}`);
+					console.log('progress', data.percent);
 				})
 				.on('start', () => {
 					console.log(`Started processing ${resolution} variant for ${fileName}`);
