@@ -110,9 +110,9 @@ const subscribe = async (topic: TOPIC_TYPE, messageHandler: MessageHandler) => {
 	await consumer.run({
 		autoCommit: false,
 		eachMessage: async ({ topic, message, partition, heartbeat }) => {
-			console.log('Each Message');
+			console.log('Each Message', topic);
 
-			if (topic !== 'VideoEvents') {
+			if (topic !== 'ProgressEvents') {
 				return;
 			}
 			let intervalId;

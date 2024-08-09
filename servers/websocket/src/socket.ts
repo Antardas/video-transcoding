@@ -28,6 +28,7 @@ export class SocketHandler {
 			logger.info(socket.id);
 			socket.on('join_room', (userId) => {
 				userSocketMap.set(socket.id, userId);
+				socket.join(userId)
 			});
 
 			socket.on('disconnect', () => {
