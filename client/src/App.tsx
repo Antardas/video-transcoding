@@ -8,16 +8,16 @@ import { socketService } from './services/socket.service';
 function App() {
 	const isRendered: React.MutableRefObject<boolean> = useRef<boolean>(false);
 	useEffect(() => {
+		socketService.setupSocketConnection();
 		if (isRendered.current) {
-			socketService.setupSocketConnection();
 			return;
 		} else {
 			isRendered.current = true;
 		}
 		return () => {
-			if (socketService.socket) {
+			if (socketService.socket?.connected) {
 				
-				// socketService.socket.close();
+				socketService.socket.close();
 			}
 		};
 	}, []);

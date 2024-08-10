@@ -14,6 +14,9 @@ import { Button } from '@/components/ui/button';
 import { SERVER_URL } from '@/lib/constant';
 import VideoPlayer from '@/components/VideoPlayer/VideoPlayer';
 import { Textarea } from '@/components/ui/textarea';
+import UploadStatus from './UploadStatus';
+import { useMemo, useState } from 'react';
+import { promiseAllProgress } from '@/lib/utils';
 
 const formSchema = z.object({
 	title: z.string().min(2, {
@@ -45,8 +48,11 @@ const initializeVideoUpload = async (file: File) => {
 		console.log(error);
 	}
 };
-
-async function uploadChunk(values: z.infer<typeof formSchema>, uploadId: string) {
+async function uploadChunk(
+	values: z.infer<typeof formSchema>,
+	uploadId: string,
+	setUploadPercentage: React.Dispatch<React.SetStateAction<number>>
+) {
 	try {
 		const chunkSize = 5 * 1024 * 1024;
 		const totalChunk = Math.ceil(values.file.size / chunkSize);
@@ -70,9 +76,13 @@ async function uploadChunk(values: z.infer<typeof formSchema>, uploadId: string)
 				body: formData,
 			});
 		});
-		console.log(chunkPromises);
+		await promiseAllProgress(chunkPromises, (completed: number) => {
+			const percentage = Math.round((completed / totalChunk) * 100);
+			console.log('Percentatge', totalChunk, percentage);
+			setUploadPercentage(percentage);
+		});
 
-		await Promise.all(chunkPromises);
+		// await Promise.all(chunkPromises);
 		return {
 			chunkSize,
 			totalChunk,
@@ -96,6 +106,8 @@ const updateFilename = (filename: string): string => {
 };
 
 const Upload = () => {
+	const [uploadProgress, setUploadProgress] = useState<number>(0);
+	const [uploadId, setUploadId] = useState<string>('');
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -112,7 +124,8 @@ const Upload = () => {
 		values.file = updatedFile;
 		const uploadId = await initializeVideoUpload(updatedFile);
 		console.log(updatedFile);
-		const { totalChunk } = await uploadChunk(values, uploadId);
+		setUploadId(uploadId);
+		const { totalChunk } = await uploadChunk(values, uploadId, setUploadProgress);
 		const userId = localStorage.getItem('userId');
 		await fetch(`${SERVER_URL}/upload/complete`, {
 			method: 'post',
@@ -131,81 +144,84 @@ const Upload = () => {
 		});
 		console.log('Upload Complete');
 	}
+	const videoSrc = useMemo(() => {
+		if (form.getValues('file')) {
+			return URL.createObjectURL(form.getValues('file'));
+		}
+		return null;
+	}, [form.getValues('file')]);
 	return (
-		<div className="border border-slate-500 rounded flex p-2">
-			<div className="w-2/5 border-r border-slate-500 pr-2">
-				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-						<FormField
-							control={form.control}
-							name="title"
-							render={({ field }) => (
-								<FormItem className="flex flex-col items-start mb-4">
-									<FormLabel className="mb-2">Title</FormLabel>
-									<FormControl>
-										<Input placeholder="video title" {...field} />
-									</FormControl>
+		<div>
+			<div className="border border-slate-500 rounded flex p-2">
+				<div className="w-2/5 border-r border-slate-500 pr-2">
+					<Form {...form}>
+						<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+							<FormField
+								control={form.control}
+								name="title"
+								render={({ field }) => (
+									<FormItem className="flex flex-col items-start mb-4">
+										<FormLabel className="mb-2">Title</FormLabel>
+										<FormControl>
+											<Input placeholder="video title" {...field} />
+										</FormControl>
 
-									<FormMessage className="text-red-600 ml-3" />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="description"
-							render={({ field }) => (
-								<FormItem className="flex flex-col items-start mb-4">
-									<FormLabel className="mb-2">Description</FormLabel>
-									<FormControl>
-										<Textarea placeholder="video description" {...field} />
-									</FormControl>
+										<FormMessage className="text-red-600 ml-3" />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="description"
+								render={({ field }) => (
+									<FormItem className="flex flex-col items-start mb-4">
+										<FormLabel className="mb-2">Description</FormLabel>
+										<FormControl>
+											<Textarea placeholder="video description" {...field} />
+										</FormControl>
 
-									<FormMessage className="text-red-600 ml-3" />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="file"
-							render={({ field }) => (
-								<FormItem className="flex flex-col items-start mb-2">
-									<FormLabel className="mb-2">Video</FormLabel>
-									<FormControl>
-										<Input
-											type="file"
-											accept=".mp4, .webm, .ogg, .avi, .mov, .wmv, .flv, .mkv, .m4v"
-											onChange={(e) => {
-												const file: File | null = e.target.files
-													? e.target.files[0]
-													: null;
-												if (!file) return;
-												field.onChange(file);
-											}}
-										/>
-									</FormControl>
+										<FormMessage className="text-red-600 ml-3" />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="file"
+								render={({ field }) => (
+									<FormItem className="flex flex-col items-start mb-2">
+										<FormLabel className="mb-2">Video</FormLabel>
+										<FormControl>
+											<Input
+												type="file"
+												accept=".mp4, .webm, .ogg, .avi, .mov, .wmv, .flv, .mkv, .m4v"
+												onChange={(e) => {
+													const file: File | null = e.target.files
+														? e.target.files[0]
+														: null;
+													if (!file) return;
+													field.onChange(file);
+												}}
+											/>
+										</FormControl>
 
-									<FormMessage className="text-red-600 ml-3" />
-								</FormItem>
-							)}
-						/>
-						<Button type="submit" className="bg-slate-900 text-white">
-							Submit
-						</Button>
-					</form>
-				</Form>
-			</div>
-			<div className="w-3/5 overflow-hidden ">
-				<div className="ml-2">
-					{form.getValues('file') ? (
-						<VideoPlayer
-							width={'100%'}
-							height={'auto'}
-							className="rounded-md"
-							src={URL.createObjectURL(form.getValues('file'))}
-						/>
-					) : null}
+										<FormMessage className="text-red-600 ml-3" />
+									</FormItem>
+								)}
+							/>
+							<Button type="submit" className="bg-slate-900 text-white">
+								Submit
+							</Button>
+						</form>
+					</Form>
+				</div>
+				<div className="w-3/5 overflow-hidden flex justify-center">
+					<div className="ml-2">
+						<VideoPlayer src={videoSrc} />
+					</div>
 				</div>
 			</div>
+
+			<UploadStatus uploadProgress={uploadProgress} uploadId={uploadId} />
 		</div>
 	);
 };
