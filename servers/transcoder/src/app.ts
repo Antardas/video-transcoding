@@ -23,69 +23,86 @@ export async function startApplication() {
 		console.log('Consumer connected', event.id);
 	});
 
-	consumer.on('consumer.crash', (event) => {
+	consumer.on('consumer.crash', async (event) => {
 		console.log('Consumer crashed', event.id);
 
 		const error = event?.payload?.error;
 		console.error(error);
+		// https://github.com/tulios/kafkajs/issues/1443#issue-1357475148
+		try {
+			await consumer.disconnect();
+		} finally {
+			setTimeout(async () => {
+				await consumer.connect();
+				bindTopics();
+				console.warn({
+					message: 'Restarted Consumer on non-retriable error',
+				});
+			}, 5000);
+		}
 	});
 
 	producer.on('producer.connect', (event) => {
 		console.log('Producer Connected', event.id);
 	});
 
-	MessageBroker.subscribe('VideoEvents', async (data: MessageType) => {
-		console.log('transcode video here');
-		console.log(data);
+	function bindTopics() {
+		MessageBroker.subscribe('VideoEvents', async (data: MessageType) => {
+			console.log('transcode video here');
+			console.log(data);
 
-		if (data.event === VideoEvent.VIDEO_UPLOADED) {
-			const progress = new ProgressGenerator(data.data.videoId, data.data.userId);
-			progress.updateStatus('processing');
+			if (data.event === VideoEvent.VIDEO_UPLOADED) {
+				const progress = new ProgressGenerator(data.data.videoId, data.data.userId);
+				progress.updateStatus('processing');
 
-			// return;
-			try {
-				const fileName = data.data.fileName.split(' ').join('_');
-				const downloadedVideoPath = path.join(VIDEO_FOLDER, fileName);
-				progress.updateInitialization('inProgress');
-				await downloadFromS3(data.data.fileName, downloadedVideoPath);
-				progress.updateInitialization('completed');
-				console.log('STEP-2------------');
-				const wavOutFile = path.join(
-					VIDEO_SUBTITLE_FOLDER,
-					fileName.replace('.', '_') + '.wav'
-				); // "transcript" is a file name we have to provide it with extension
-				const subOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_')); // "transcript" is a file name we have to provide it with extension
-				console.log('Converting to wav file', downloadedVideoPath);
-				await progress.updateSubtitleGeneration('0');
-				await convertToWav(downloadedVideoPath, wavOutFile);
-				await progress.updateSubtitleGeneration('5');
-				await generateSubtitle(
-					wavOutFile,
-					subOutFile,
-					progress.updateSubtitleGeneration.bind(progress)
-				);
+				// return;
+				try {
+					const fileName = data.data.fileName.split(' ').join('_');
+					const downloadedVideoPath = path.join(VIDEO_FOLDER, fileName);
+					progress.updateInitialization('inProgress');
+					await downloadFromS3(data.data.fileName, downloadedVideoPath);
+					progress.updateInitialization('completed');
+					console.log('STEP-2------------');
+					const wavOutFile = path.join(
+						VIDEO_SUBTITLE_FOLDER,
+						fileName.replace('.', '_') + '.wav'
+					); // "transcript" is a file name we have to provide it with extension
+					const subOutFile = path.join(VIDEO_SUBTITLE_FOLDER, fileName.replace('.', '_')); // "transcript" is a file name we have to provide it with extension
+					console.log('Converting to wav file', downloadedVideoPath);
+					await progress.updateSubtitleGeneration('0');
+					await convertToWav(downloadedVideoPath, wavOutFile);
+					await progress.updateSubtitleGeneration('5');
+					await generateSubtitle(
+						wavOutFile,
+						subOutFile,
+						progress.updateSubtitleGeneration.bind(progress)
+					);
 
-				const variants = await createHSLVariants(
-					fileName,
-					`${subOutFile}.srt`,
-					progress.updateTranscoding.bind(progress)
-				);
+					const variants = await createHSLVariants(
+						fileName,
+						`${subOutFile}.srt`,
+						progress.updateTranscoding.bind(progress)
+					);
 
-				generateMasterPlaylist(
-					fileName,
-					variants,
-					`${data.data.fileName.replace('.', '_').split(' ').join('_')}_320x180_vtt.m3u8`
-				);
-				console.log('Deleting local copy for video');
-				await deleteFile(downloadedVideoPath);
-				console.log('Deleted local copy for video');
-				await uploadHLSFilesToS3(fileName);
-				progress.updateStatus('completed');
-			} catch (error) {
-				console.log(error);
+					generateMasterPlaylist(
+						fileName,
+						variants,
+						`${data.data.fileName
+							.replace('.', '_')
+							.split(' ')
+							.join('_')}_320x180_vtt.m3u8`
+					);
+					console.log('Deleting local copy for video');
+					await deleteFile(downloadedVideoPath);
+					console.log('Deleted local copy for video');
+					await uploadHLSFilesToS3(fileName);
+					progress.updateStatus('completed');
+				} catch (error) {
+					console.log(error);
+				}
 			}
-		}
-	});
+		});
+	}
 }
 
 async function testApplication() {

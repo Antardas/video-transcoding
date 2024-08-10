@@ -118,7 +118,10 @@ const generateSubtitleWithMakeFile = async (
 		child.stderr.on('data', (data: string) => {
 			const match = data.toString().match(percentageRegex);
 			if (match) {
-				const percentage = match[1];
+				let percentage = match[1];
+				if (percentage === '101') {
+					percentage = '100'
+				}
 				progress(percentage);
 				console.log(percentage);
 			}
