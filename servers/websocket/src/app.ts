@@ -19,9 +19,20 @@ app.use(express.json());
 			`);
 	});
 
-	consumer.on('consumer.crash', (event) => {
+	consumer.on('consumer.crash', async (event) => {
 		const error = event?.payload?.error;
 		logger.error(error);
+		// https://github.com/tulios/kafkajs/issues/1443#issue-1357475148
+		try {
+			await consumer.disconnect();
+		} finally {
+			setTimeout(async () => {
+				await consumer.connect();
+				console.warn({
+					message: 'Restarted Consumer on non-retriable error',
+				});
+			}, 5000);
+		}
 	});
 
 	MessageBroker.subscribe('ProgressEvents', async (data: MessageType) => {
