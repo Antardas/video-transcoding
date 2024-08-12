@@ -1,5 +1,5 @@
 ## Transform Video Streaming with Seamless Transcoding: A Scalable, Real-Time Solution Powered by NGINX, Kafka, and AI
-
+![Architectur](./architecture.jpg)
 ### Transcoding Service Project: Key Features
 
 #### 1. **Upload Service**
