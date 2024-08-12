@@ -5,6 +5,7 @@ import './App.css';
 import Header from './components/Header/Header';
 import Upload from './components/Upload/Upload';
 import { socketService } from './services/socket.service';
+import VideoWithInfo from './components/VideoFeed/VideoWithInfo';
 function App() {
 	const isRendered: React.MutableRefObject<boolean> = useRef<boolean>(false);
 	useEffect(() => {
@@ -35,6 +36,7 @@ function App() {
 				<Routes>
 					<Route path="/" element={<VideoFeed />} />
 					<Route path="/upload" element={<Upload />} />
+					<Route path="/videos/:id" element={<VideoWithInfo />} />
 				</Routes>
 			</BrowserRouter>
 		</div>

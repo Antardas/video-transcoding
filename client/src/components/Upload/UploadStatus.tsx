@@ -62,7 +62,7 @@ const UploadStatus: React.FC<Props> = ({ uploadProgress, uploadId }) => {
 			socketService.socket.off('progress', progressHandler);
 		};
 	}, [progressHandler]);
-	if (!progress.status || !uploadId) {
+	if (!progress.status && !uploadId) {
 		return null;
 	}
 

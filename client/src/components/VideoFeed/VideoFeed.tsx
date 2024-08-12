@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import VideoCard from './VideoCard';
 import { WATCH_SERVER_URL } from '@/lib/constant';
 import { VideoObj } from '@/types';
+import Search from '../Upload/Search';
 
 const fetchVideos = async (limit: number, offset: number): Promise<AllVideosRes> => {
 	const res = await fetch(`${WATCH_SERVER_URL}/videos?limit=${limit}&offset=${offset}`);
@@ -19,16 +20,21 @@ const VideoFeed = () => {
 		})();
 	}, []);
 	return (
-		<div className="grid grid-cols-3 gap-y-6 gap-x-4">
-			{videos.map((video) => (
-				<VideoCard
-					key={`video${video.id} `}
-					url={video.url}
-					title={video.title}
-					description={video.description}
-					id={video.id}
-				/>
-			))}
+		<div>
+			<div className="flex justify-center mb-4">
+				<Search />
+			</div>
+			<div className="grid grid-cols-3 gap-y-6 gap-x-4">
+				{videos.map((video) => (
+					<VideoCard
+						key={`video${video.id}`}
+						url={video.url}
+						title={video.title}
+						description={video.description}
+						id={video.id}
+					/>
+				))}
+			</div>
 		</div>
 	);
 };

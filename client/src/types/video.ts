@@ -4,6 +4,10 @@ export interface VideoObj {
 	description: string;
 	url: string;
 }
+export type AllVideosRes = {
+	success: boolean;
+	data: VideoObj[];
+};
 
 export interface VideoProcessingProgress {
 	videoId: string;
