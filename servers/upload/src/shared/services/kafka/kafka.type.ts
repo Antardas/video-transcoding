@@ -1,4 +1,4 @@
-import { MessageType, TOPIC_TYPE, VideoEvent } from '../../../types';
+import { MessageType, SearchIndexEvents, TOPIC_TYPE, VideoEvent } from '../../../types';
 
 export interface KafkaType {
 	// Producer
@@ -15,7 +15,7 @@ export interface KafkaType {
 export interface PublishType {
 	headers?: Record<string, any>;
 	topic: TOPIC_TYPE;
-	event: VideoEvent;
+	event: VideoEvent | SearchIndexEvents;
 	message: Record<string, any>;
 }
 

@@ -1,6 +1,6 @@
 import { Consumer, Kafka, logLevel, Partitioners, Producer } from 'kafkajs';
 import { KafkaType, MessageHandler, PublishType } from './kafka.type';
-import { MessageType, VideoEvent } from '../../../types';
+import { MessageType, TOPIC_TYPE, VideoEvent } from '../../../types';
 
 // Configuration
 const CLIENT_ID = process.env.CLIENT_ID || 'video-service';
@@ -16,7 +16,7 @@ const kafka = new Kafka({
 let producer: Producer;
 let consumer: Consumer;
 
-const createTopic = async (topicList: string[]) => {
+const createTopic = async (topicList: TOPIC_TYPE[]) => {
 	const topicsParams = topicList.map((topic) => ({
 		topic,
 		numPartitions: 1,
@@ -38,7 +38,7 @@ const createTopic = async (topicList: string[]) => {
 };
 
 const connectProducer = async <T>(): Promise<T> => {
-	await createTopic(['VideoEvents']);
+	await createTopic(['VideoEvents', 'SearchIndexEvents']);
 
 	if (producer) {
 		console.log(producer.events)

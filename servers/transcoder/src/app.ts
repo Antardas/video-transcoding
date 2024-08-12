@@ -103,6 +103,7 @@ export async function startApplication() {
 			}
 		});
 	}
+	bindTopics()
 }
 
 async function testApplication() {

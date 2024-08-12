@@ -11,7 +11,7 @@ import AppError from '../shared/global/helpers/AppError';
 import { PgRaw } from 'drizzle-orm/pg-core/query-builders/raw';
 import { QueryResult } from 'pg';
 import { MessageBroker } from '../shared/services/kafka';
-import { VideoEvent } from '../types';
+import { SearchIndexEvents, VideoEvent } from '../types';
 const uploadController = {
 	initialize: catchAsyncError(async (req: Request, res: Response) => {
 		const { fileName } = req.body;
@@ -25,7 +25,7 @@ const uploadController = {
 		console.log(multipartParams);
 
 		const uploadId = multipartParams?.UploadId;
-		res.status(200).json({ message: 'Hello', uploadID: uploadId });
+		res.status(200).json({ message: 'video initialized', uploadID: uploadId });
 	}),
 
 	upload: catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
@@ -77,7 +77,7 @@ const uploadController = {
 		const video = await db.execute(
 			sql`INSERT INTO videos (description, title, url) VALUES (${description}, ${title}, ${uploadResult.Location}) RETURNING *;`
 		);
-		
+
 		await MessageBroker.publish({
 			topic: 'VideoEvents',
 			message: {
@@ -87,13 +87,24 @@ const uploadController = {
 				description,
 				url: uploadResult.Location,
 				videoId: video.rows[0].id,
-				userId
+				userId,
 			},
 			event: VideoEvent.VIDEO_UPLOADED,
 			headers: {
 				token: 'something',
 			},
 		});
+
+		await MessageBroker.publish({
+			topic: 'SearchIndexEvents',
+			message: video.rows[0],
+			event: SearchIndexEvents.ADD_TO_SEARCH_ENGINE,
+			headers: {
+				token: 'something',
+			},
+		});
+
+		//  Add also kafkajs transaction
 
 		return res.status(200).json({ message: 'upload complete', data: video.rows[0] });
 	}),
