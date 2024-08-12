@@ -1,5 +1,7 @@
 ## Transform Video Streaming with Seamless Transcoding: A Scalable, Real-Time Solution Powered by NGINX, Kafka, and AI
 ![Architectur](./architecture.jpg)
+
+![Technlogy](./transcoder-Technology.jpg)
 ### Transcoding Service Project: Key Features
 
 #### 1. **Upload Service**
@@ -64,7 +66,7 @@ The **Upload Service** handles the initial upload of video files. It provides en
 - KafkaJS
 - AWS S3 for storage
 
-**Example Endpoints:**
+** Endpoints:**
 - `POST /upload/initialize` - Initiates a multipart upload.
 - `POST /upload` - Uploads a video chunk.
 - `POST /upload/complete` - Finalizes the upload process.
@@ -86,7 +88,7 @@ The **Transcoder Service** processes video files after they are uploaded. It lis
 - KafkaJS
 - AWS S3 for temporary storage
 
-**Example Topics:**
+** Topics:**
 - `VideoProcessing` - Consumes messages about videos that need processing.
 - `ProgressEvents` - Publishes progress updates during video transcoding.
 
@@ -97,16 +99,16 @@ The **Transcoder Service** processes video files after they are uploaded. It lis
 The **Watch Service** handles real-time monitoring and playback of videos. It connects to Kafka to listen for messages about video processing completion and updates the user interface with real-time progress and status. This service ensures that users get timely updates on their video status.
 
 **Key Features:**
-- Subscribes to Kafka topics to receive updates about video processing.
-- Provides real-time progress updates and notifications.
-- Manages video playback and user interactions.
+- Subscribes to Kafka topics to receive updates about video indexing.
+- Add add data to the Elastic search
+- Handle Search and listing video
+
 
 **Tech Stack:**
 - Node.js
-- WebSocket for real-time updates
 - KafkaJS
 
-**Example Topics:**
+** Topics:**
 - `VideoEvents` - Consumes messages related to video status updates.
 - `SearchIndexEvents` - consume message and indexing to elastic-search
 
@@ -124,6 +126,8 @@ The **WebSocket Service** facilitates real-time communication between the client
 **Tech Stack:**
 - Node.js
 - socket.io
+- Kafkajs
+- express.js
 
 
 ---
