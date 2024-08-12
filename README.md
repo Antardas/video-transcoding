@@ -1,6 +1,7 @@
 ## Transform Video Streaming with Seamless Transcoding: A Scalable, Real-Time Solution Powered by NGINX, Kafka, and AI
 > [!NOTE]  
 > For running AI auto-subtitle generation, you don't need an OpenAI API key because whisper AI is an open-source pretrained model.
+
 ![Architectur](./architecture.jpg)
 
 ![Technlogy](./transcoder-Technology.jpg)
