@@ -66,6 +66,10 @@ const UploadStatus: React.FC<Props> = ({ uploadProgress, uploadId }) => {
 		return null;
 	}
 
+	if(progress.videoId) {
+		uploadProgress = 100
+	}
+
 	return (
 		<div className="w-[800px] flex flex-col text-start ">
 			<div className="flex justify-start pb-2 border-b-2 mt-2">

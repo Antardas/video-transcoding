@@ -57,7 +57,7 @@
 -   Ensures secure, scalable, and high-performance API management across the system.
 
 This comprehensive feature set highlights the key components and their interactions within your transcoding service project, ensuring efficient video processing, real-time progress tracking, robust search capabilities, and optimized API management with NGINX.
-Certainly! Here’s how you can structure the **Services** section in your project documentation for your GitHub README. This section provides an overview of each service in your project, describing its purpose and functionality.
+
 
 ---
 
@@ -153,4 +153,3 @@ The **WebSocket Service** facilitates real-time communication between the client
 
 ---
 
-Feel free to adjust the descriptions and tech stack based on the actual implementation details of your services. This documentation will help others understand the roles and responsibilities of each service within your project.
